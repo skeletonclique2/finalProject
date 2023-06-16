@@ -1,6 +1,5 @@
 import random
 from queue import PriorityQueue
-from constraint import Problem, AllDifferentConstraint
 
 apartments = [
     (1, 1), (1, 2), (1, 3), (1, 4),
@@ -56,62 +55,98 @@ def move(X, Y):
             possible_moves.append((X, Y - 1))
     return possible_moves
 
-def find_shortest_paths():
+def find_shortest_path(X, Y):
     start = (1, 1)
+    target = (X, Y)
 
-    problem = Problem()
-    problem.addVariables(range(1, 5), apartments)
-    problem.addConstraint(AllDifferentConstraint())
+    distances = {apartment: float('inf') for apartment in apartments}
+    distances[start] = 0
 
-    solutions = problem.getSolutions()
+    queue = PriorityQueue()
+    queue.put((0, start))
 
-    shortest_paths = []
+    previous = {apartment: None for apartment in apartments}
 
-    for solution in solutions:
-        target = solution[1]  # Neighboring apartment
+    while not queue.empty():
+        _, current = queue.get()
 
-        distances = {apartment: float('inf') for apartment in apartments}
-        distances[start] = 0
+        if current == target:
+            break
 
-        queue = PriorityQueue()
-        queue.put((0, start))
+        for next_apartment in move(*current):
+            distance = distances[current] + 1
+            if distance < distances[next_apartment]:
+                distances[next_apartment] = distance
+                previous[next_apartment] = current
 
-        previous = {apartment: None for apartment in apartments}
+                priority = distance + heuristic(*next_apartment)
+                queue.put((priority, next_apartment))
 
-        while not queue.empty():
-            _, current = queue.get()
+    if previous[target] is not None:
+        path = []
+        current = target
+        while current is not None:
+            path.append(current)
+            current = previous[current]
+        path.reverse()
+        return path
 
-            if current == target:
-                break
+    return None
 
-            for next_apartment in move(*current):
-                distance = distances[current] + 1
-                if distance < distances[next_apartment]:
-                    distances[next_apartment] = distance
-                    previous[next_apartment] = current
 
-                    priority = distance + heuristic(*next_apartment)
-                    queue.put((priority, next_apartment))
+# Define the CSP class
+class CSP:
+    def __init__(self, variables, domains, constraints):
+        self.variables = variables
+        self.domains = domains
+        self.constraints = constraints
 
-        if previous[target] is not None:
-            path = []
-            current = target
-            while current is not None:
-                path.append(current)
-                current = previous[current]
-            path.reverse()
-            shortest_paths.append(path)
+    def backtrack(self, assignment):
+        if len(assignment) == len(self.variables):
+            return assignment
 
-    return shortest_paths
+        var = self.select_unassigned_variable(assignment)
+        for value in self.order_domain_values(var, assignment):
+            if self.is_consistent(var, value, assignment):
+                assignment[var] = value
+                result = self.backtrack(assignment)
+                if result is not None:
+                    return result
+                del assignment[var]
+        return None
 
-# Call the function
-shortest_paths = find_shortest_paths()
+    def select_unassigned_variable(self, assignment):
+        for var in self.variables:
+            if var not in assignment:
+                return var
 
-if shortest_paths:
+    def order_domain_values(self, var, assignment):
+        return self.domains[var]
+
+    def is_consistent(self, var, value, assignment):
+        for constraint in self.constraints:
+            if var in constraint:
+                neighbor = constraint[0] if constraint[0] != var else constraint[1]
+                if neighbor in assignment and assignment[neighbor] == value:
+                    return False
+        return True
+
+
+# Construct the CSP
+variables = apartments[4:]
+domains = {var: apartments for var in variables}
+constraints = [(var1, var2) for i, var1 in enumerate(variables) for var2 in variables[i + 1:]]
+csp = CSP(variables, domains, constraints)
+
+# Find the solution using CSP
+csp_solution = csp.backtrack({})
+
+# Print the shortest paths to each neighboring apartment
+if csp_solution is not None:
     print("Shortest paths to reach the neighboring apartments:")
-    for path in shortest_paths:
-        for floor, apartment in path:
-            print("Floor: {}, Apartment: {}".format(floor, apartment))
-        print("---")
+    for var, apartment in csp_solution.items():
+        path = find_shortest_path(apartment[0], apartment[1])
+        if path is not None:
+            print("Apartment: {}, Path: {}".format(var, path))
 else:
-    print("No paths found to reach the neighboring apartments.")
+    print("No solution found for the neighboring apartments.")

@@ -34,25 +34,6 @@ def move(X, Y):
         possible_moves.append((X, Y + 1))
     if (X, Y - 1) in apartments:
         possible_moves.append((X, Y - 1))
-    if X == 1:
-        if (X, Y + 1) in apartments:
-            possible_moves.append((X, Y + 1))
-        if (X, Y - 1) in apartments:
-            possible_moves.append((X, Y - 1))
-    elif X == 6:
-        if (X, Y + 1) in apartments:
-            possible_moves.append((X, Y + 1))
-        if (X, Y - 1) in apartments:
-            possible_moves.append((X, Y - 1))
-    else:
-        if (X, Y + 1) in apartments:
-            possible_moves.append((X, Y + 1))
-        if (X, Y - 1) in apartments:
-            possible_moves.append((X, Y - 1))
-        if (X, Y + 1) in apartments:
-            possible_moves.append((X, Y + 1))
-        if (X, Y - 1) in apartments:
-            possible_moves.append((X, Y - 1))
     return possible_moves
 
 def find_shortest_path(X, Y):
@@ -78,7 +59,6 @@ def find_shortest_path(X, Y):
             if distance < distances[next_apartment]:
                 distances[next_apartment] = distance
                 previous[next_apartment] = current
-
                 priority = distance + heuristic(*next_apartment)
                 queue.put((priority, next_apartment))
 
@@ -93,12 +73,21 @@ def find_shortest_path(X, Y):
 
     return None
 
-# Call the function
-shortest_path = find_shortest_path(burglar[0], burglar[1])
+# Randomly assign broken_window and broken_lock to the same apartment
+broken_apartment = random.choice(apartments)
+
+broken_window_floor, broken_window_apartment = broken_apartment
+broken_lock_floor, broken_lock_apartment = broken_apartment
+
+print("Broken Window Apartment: Floor {}, Apartment {}".format(broken_window_floor, broken_window_apartment))
+print("Broken Lock Apartment: Floor {}, Apartment {}".format(broken_lock_floor, broken_lock_apartment))
+
+# Find the shortest path to the intruder's location using A* searching
+shortest_path = find_shortest_path(broken_window_floor, broken_window_apartment)
 
 if shortest_path is not None:
-    print("Shortest path to reach the burglar:")
+    print("Shortest path to reach the broken window apartment:")
     for floor, apartment in shortest_path:
         print("Floor: {}, Apartment: {}".format(floor, apartment))
 else:
-    print("No path found to reach the burglar.")
+    print("No path found to reach the broken window apartment.")

@@ -15,7 +15,11 @@ def randomize_burglar():
     Y = random.randint(1, 4)
     return (X, Y)
 
+def randomize_broken_apartment():
+    return random.choice(apartments)
+
 burglar = randomize_burglar()
+broken_apartment = randomize_broken_apartment()
 
 def goal(X, Y):
     return (X, Y) == burglar
@@ -34,25 +38,6 @@ def move(X, Y):
         possible_moves.append((X, Y + 1))
     if (X, Y - 1) in apartments:
         possible_moves.append((X, Y - 1))
-    if X == 1:
-        if (X, Y + 1) in apartments:
-            possible_moves.append((X, Y + 1))
-        if (X, Y - 1) in apartments:
-            possible_moves.append((X, Y - 1))
-    elif X == 6:
-        if (X, Y + 1) in apartments:
-            possible_moves.append((X, Y + 1))
-        if (X, Y - 1) in apartments:
-            possible_moves.append((X, Y - 1))
-    else:
-        if (X, Y + 1) in apartments:
-            possible_moves.append((X, Y + 1))
-        if (X, Y - 1) in apartments:
-            possible_moves.append((X, Y - 1))
-        if (X, Y + 1) in apartments:
-            possible_moves.append((X, Y + 1))
-        if (X, Y - 1) in apartments:
-            possible_moves.append((X, Y - 1))
     return possible_moves
 
 def find_shortest_path(X, Y):
@@ -93,60 +78,32 @@ def find_shortest_path(X, Y):
 
     return None
 
+def check_constraints(path, broken_apartment):
+    broken_window_floor, broken_window_apartment = broken_apartment
+    broken_lock_floor, broken_lock_apartment = broken_apartment
 
-# Define the CSP class
-class CSP:
-    def __init__(self, variables, domains, constraints):
-        self.variables = variables
-        self.domains = domains
-        self.constraints = constraints
+    # Check if the path contains the broken window and broken lock apartments
+    window_found = False
+    lock_found = False
 
-    def backtrack(self, assignment):
-        if len(assignment) == len(self.variables):
-            return assignment
+    for floor, apartment in path:
+        if (floor, apartment) == (broken_window_floor, broken_window_apartment):
+            window_found = True
+        if (floor, apartment) == (broken_lock_floor, broken_lock_apartment):
+            lock_found = True
 
-        var = self.select_unassigned_variable(assignment)
-        for value in self.order_domain_values(var, assignment):
-            if self.is_consistent(var, value, assignment):
-                assignment[var] = value
-                result = self.backtrack(assignment)
-                if result is not None:
-                    return result
-                del assignment[var]
-        return None
+    return window_found and lock_found
 
-    def select_unassigned_variable(self, assignment):
-        for var in self.variables:
-            if var not in assignment:
-                return var
+# Call the function to find the shortest path
+shortest_path = find_shortest_path(broken_apartment[0], broken_apartment[1])
 
-    def order_domain_values(self, var, assignment):
-        return self.domains[var]
-
-    def is_consistent(self, var, value, assignment):
-        for constraint in self.constraints:
-            if var in constraint:
-                neighbor = constraint[0] if constraint[0] != var else constraint[1]
-                if neighbor in assignment and assignment[neighbor] == value:
-                    return False
-        return True
-
-
-# Construct the CSP
-variables = apartments[4:]
-domains = {var: apartments for var in variables}
-constraints = [(var1, var2) for i, var1 in enumerate(variables) for var2 in variables[i + 1:]]
-csp = CSP(variables, domains, constraints)
-
-# Find the solution using CSP
-csp_solution = csp.backtrack({})
-
-# Print the shortest paths to each neighboring apartment
-if csp_solution is not None:
-    print("Shortest paths to reach the neighboring apartments:")
-    for var, apartment in csp_solution.items():
-        path = find_shortest_path(apartment[0], apartment[1])
-        if path is not None:
-            print("Apartment: {}, Path: {}".format(var, path))
+if shortest_path is not None:
+    # Check the constraints on the shortest path
+    if check_constraints(shortest_path, broken_apartment):
+        print("Shortest path to reach the broken apartment:")
+        for floor, apartment in shortest_path:
+            print("Floor: {}, Apartment: {}".format(floor, apartment))
+    else:
+        print("The shortest path does not satisfy the constraints.")
 else:
-    print("No solution found for the neighboring apartments.")
+    print("No path found to reach the broken apartment.")

@@ -1,31 +1,31 @@
 import pandas as pd
 import random
 
-locations = [(floor, apartment) for floor in range(1, 7) for apartment in range(1, 5)]
+locations = [(floor, apartment) for floor in range(1, 9) for apartment in range(1, 6)]
 
 apartments = pd.DataFrame(locations, columns=['Floor', 'Apartment'])
 
-# Add boolean columns for broken_window and broken_lock
+# Add boolean columns for broken_window, broken_lock, and intrusion variables
 apartments['broken_window'] = False
 apartments['broken_lock'] = False
+apartments['both_broken'] = False
 
-floor_number = random.randint(1, 6)
-apartment_number = random.randint(1, 4)
+# Select a random apartment index
+intrusion_index = random.randint(0, len(locations) - 1)
 
-# Update the 'broken_window' variable for a specific apartment
-apartments.loc[(apartments['Floor'] == floor_number) & (apartments['Apartment'] == apartment_number), 'broken_window'] = True
-apartments.loc[(apartments['Floor'] == floor_number) & (apartments['Apartment'] == apartment_number), 'broken_lock'] = True
+# Randomly set either or both variables to True for the selected apartment
+apartments.loc[intrusion_index, 'broken_window'] = random.choice([True, False])
+apartments.loc[intrusion_index, 'broken_lock'] = random.choice([True, False])
 
-# Search and print apartments with both variables set to True
-filtered_fl = apartments.loc[(apartments['broken_window'] == True) & (apartments['broken_lock'] == True), 'Floor']
-filtered_app = apartments.loc[(apartments['broken_window'] == True) & (apartments['broken_lock'] == True), 'Apartment']
+# Set the intrusion variable to True if both broken_window and broken_lock variables are True
+apartments.loc[(apartments['broken_window'] == True) & (apartments['broken_lock'] == True), 'both_broken'] = True
 
-print("Apartment number with broken window and broken lock:")
-for apartment in filtered_fl:
-    print(apartment)
+# Search and print the apartment with either or both variables set to True
+filtered_apartments = apartments.loc[(apartments['broken_window'] == True) | (apartments['broken_lock'] == True)]
 
-for floor in filtered_app:
-    print(floor)
+print("Found the Intrusion!")
+for _, apartment in filtered_apartments.iterrows():
+    print(f"Floor: {apartment['Floor']}, Apartment: {apartment['Apartment']}")
 
 # Print the DataFrame
 print(apartments)

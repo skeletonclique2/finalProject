@@ -55,6 +55,17 @@ else:
     for _, apartment in filtered_apartments.iterrows():
         print(f"Floor: {apartment['Floor']}, Apartment: {apartment['Apartment']}")
 
+    floor_to_evacuate = (apartments.loc[intrusion_index, 'Floor'])
+    print(" ")
+    if floor_to_evacuate == 1:
+        print("PLEASE EVACUATE THE " + str(floor_to_evacuate) + "st FLOOR")
+    elif floor_to_evacuate == 2:
+            print("PLEASE EVACUATE THE " + str(floor_to_evacuate) + "nd FLOOR")
+    if floor_to_evacuate == 3:
+        print("PLEASE EVACUATE THE " + str(floor_to_evacuate) + "rd FLOOR")
+    else:
+        print("PLEASE EVACUATE THE " + str(floor_to_evacuate) + "th FLOOR")
+
     # Perform A* search for each end apartment
     print("\nShortest Path to the Apartment Intrusion is found at:")
     for _, apartment in filtered_apartments.iterrows():
